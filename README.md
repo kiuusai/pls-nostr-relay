@@ -85,6 +85,39 @@ The image renders these variables into the relay's `config.toml` at startup:
 
 The allowed event kinds are fixed in the template to `0` and `30078`; they are not environment variables.
 
+## Build your own image
+
+From the repository root, build the image and tag it with a name and version of your choice:
+
+```sh
+docker build --tag pls-nostr-rs-relay:local .
+```
+
+Run it the same way as the published image, replacing the image name with your local tag:
+
+```sh
+docker run --rm --detach \
+  --name pls-nostr-relay \
+  --publish 8080:8080 \
+  --env DATABASE_URL='postgresql://nostr:password@<database-host>:5432/nostr' \
+  pls-nostr-rs-relay:local
+```
+
+Replace `<database-host>` with a PostgreSQL hostname or IP reachable from the container.
+The image uses the optional setting defaults listed above.
+For a local relay and database, use `docker compose up --build` as described in [Run in development](#run-in-development).
+
+## Publish an image with GitHub Actions
+
+The [Publish Docker image workflow](.github/workflows/publish-image.yml) builds and pushes the image to Docker Hub when a GitHub release is published or edited.
+Configure these repository settings before publishing a release:
+
+- Actions variable `DOCKERHUB_USERNAME`: Docker Hub account or organization that owns the image.
+- Actions variable `DOCKERHUB_REPOSITORY`: Docker Hub repository name.
+- Actions secret `DOCKERHUB_TOKEN`: Docker Hub access token with permission to push to that repository.
+
+The workflow tags the image with the GitHub release tag, for example `docker.io/kiuusai/pls-nostr-rs-relay:v1.2.3`.
+
 ## Azure deployment
 
 The [`terraform/`](terraform/) directory provisions the production Azure Container Apps environment, relay, Postgres container, and Azure Files storage.
