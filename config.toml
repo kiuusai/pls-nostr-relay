@@ -1,20 +1,20 @@
 [info]
-relay_url = {{ RELAY_URL | toml_string }}
-name = {{ RELAY_NAME | toml_string }}
-description = {{ RELAY_DESCRIPTION | toml_string }}
+relay_url = {{ RELAY_URL | default('ws://localhost:8080/') | toml_string }}
+name = {{ RELAY_NAME | default('Private Law Society Nostr relay') | toml_string }}
+description = {{ RELAY_DESCRIPTION | default('Private Law Society Nostr relay.') | toml_string }}
 
 [database]
 connection = {{ DATABASE_URL | toml_string }}
 
 engine = "postgres"
 [network]
-port = {{ RELAY_PORT or 8080 | int }}
+port = {{ RELAY_PORT | default(8080) | int }}
 
 address = "0.0.0.0"
 [options]
-reject_future_seconds = {{ REJECT_FUTURE_SECONDS or 1800 | int}}
+reject_future_seconds = {{ REJECT_FUTURE_SECONDS | default(1800) | int }}
 
 [limits]
-subscriptions_per_min = {{ SUBSCRIPTIONS_PER_MIN or 0 | int }}
+subscriptions_per_min = {{ SUBSCRIPTIONS_PER_MIN | default(0) | int }}
 
 event_kind_allow_list = [0, 30078]

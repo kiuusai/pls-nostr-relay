@@ -49,6 +49,42 @@ docker compose down
 Compose keeps Postgres data in a named Docker volume.
 Running `docker compose down` preserves that volume; `docker compose down -v` removes it and its data.
 
+## Run the published Docker image
+
+The published image is [`docker.io/kiuusai/pls-nostr-rs-relay`](https://hub.docker.com/r/kiuusai/pls-nostr-rs-relay).
+It requires a reachable PostgreSQL database.
+Supply its connection URL and the relay settings as environment variables:
+
+```sh
+docker run --rm \
+  --name pls-nostr-relay \
+  --restart unless-stopped \
+  --publish 8080:8080 \
+  --env DATABASE_URL='postgresql://nostr:password@<database-host>:5432/nostr' \
+  docker.io/kiuusai/pls-nostr-rs-relay
+```
+
+Replace `<database-host>` with a hostname or IP reachable from the container.
+Set `RELAY_URL` to the relay's externally reachable WebSocket URL when using a public host; its default is `ws://localhost:8080/`, intended for local use.
+The command publishes port 8080; change both sides of `--publish` and `RELAY_PORT` together to use another container port.
+The image does not start PostgreSQL or persist database storage, so configure and operate the database separately.
+
+## Relay environment variables
+
+The image renders these variables into the relay's `config.toml` at startup:
+
+| Variable                | Purpose                                                                                            | Example / default                                                                                  |
+| ----------------------- | -------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| `DATABASE_URL`          | PostgreSQL connection URL (`[database].connection`).                                               | Required; for example `postgresql://nostr:password@db.example:5432/nostr`                          |
+| `RELAY_URL`             | WebSocket URL advertised by the relay (`[info].relay_url`).                                        | Optional; `ws://localhost:8080/`                                                                   |
+| `RELAY_NAME`            | Relay name shown to clients (`[info].name`).                                                       | Optional; `Private Law Society Nostr relay`                                                        |
+| `RELAY_DESCRIPTION`     | Relay description shown to clients (`[info].description`).                                         | Optional; `Private Law Society Nostr relay.`                                                       |
+| `RELAY_PORT`            | Port the relay listens on inside the container (`[network].port`).                                 | Optional; `8080`                                                                                   |
+| `REJECT_FUTURE_SECONDS` | Maximum number of seconds an event may be dated in the future (`[options].reject_future_seconds`). | Optional; `1800`                                                                                   |
+| `SUBSCRIPTIONS_PER_MIN` | Subscription limit per client per minute (`[limits].subscriptions_per_min`).                       | Optional; `0` in the image template if unset (no configured limit); `.env.example` sets it to `10` |
+
+The allowed event kinds are fixed in the template to `0` and `30078`; they are not environment variables.
+
 ## Azure deployment
 
 The [`terraform/`](terraform/) directory provisions the production Azure Container Apps environment, relay, Postgres container, and Azure Files storage.
