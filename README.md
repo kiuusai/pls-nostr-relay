@@ -117,6 +117,7 @@ Configure these repository settings before publishing a release:
 - Actions secret `DOCKERHUB_TOKEN`: Docker Hub access token with permission to push to that repository.
 
 The workflow tags the image with the GitHub release tag, for example `docker.io/kiuusai/pls-nostr-rs-relay:v1.2.3`.
+When the release is the repository's latest release, it also pushes the `latest` tag.
 
 ## Azure deployment
 

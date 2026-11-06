@@ -25,9 +25,29 @@ jobs:
           username: ${{ vars.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
+      - name: Select image tags
+        id: tags
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const currentTag = context.payload.release.tag_name;
+            const { data: latestRelease } = await github.rest.repos.getLatestRelease({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+            });
+            const image = `docker.io/${process.env.DOCKERHUB_USERNAME}/${process.env.DOCKERHUB_REPOSITORY}`;
+            const tags = [`${image}:${currentTag}`];
+            if (latestRelease.tag_name === currentTag) {
+              tags.push(`${image}:latest`);
+            }
+            core.setOutput('tags', tags.join('\n'));
+        env:
+          DOCKERHUB_USERNAME: ${{ vars.DOCKERHUB_USERNAME }}
+          DOCKERHUB_REPOSITORY: ${{ vars.DOCKERHUB_REPOSITORY }}
+
       - name: Build and push image
         uses: docker/build-push-action@v6
         with:
           context: .
           push: true
-          tags: docker.io/${{ vars.DOCKERHUB_USERNAME }}/${{ vars.DOCKERHUB_REPOSITORY }}:${{ github.event.release.tag_name }}
+          tags: ${{ steps.tags.outputs.tags }}
