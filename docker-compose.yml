@@ -1,0 +1,35 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-nostr}
+      POSTGRES_USER: ${POSTGRES_USER:-nostr}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-nostr}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-nostr} -d ${POSTGRES_DB:-nostr}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  relay:
+    build: .
+    image: pls-nostr-relay:local
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "${RELAY_HOST_PORT:-8080}:${RELAY_PORT:-8080}"
+    environment:
+      DATABASE_URL: ${DATABASE_URL:-postgresql://${POSTGRES_USER:-nostr}:${POSTGRES_PASSWORD:-nostr}@postgres:5432/${POSTGRES_DB:-nostr}}
+      RELAY_URL: ${RELAY_URL:-ws://localhost:${RELAY_HOST_PORT:-8080}/}
+      RELAY_NAME: ${RELAY_NAME:-Private Law Society Nostr relay}
+      RELAY_DESCRIPTION: ${RELAY_DESCRIPTION:-Private Law Society Nostr relay.}
+      RELAY_PORT: ${RELAY_PORT:-8080}
+      REJECT_FUTURE_SECONDS: ${REJECT_FUTURE_SECONDS:-1800}
+      SUBSCRIPTIONS_PER_MIN: ${SUBSCRIPTIONS_PER_MIN:-10}
+volumes:
+  postgres-data:

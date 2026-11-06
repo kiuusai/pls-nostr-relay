@@ -1,0 +1,20 @@
+[info]
+relay_url = {{ RELAY_URL | toml_string }}
+name = {{ RELAY_NAME | toml_string }}
+description = {{ RELAY_DESCRIPTION | toml_string }}
+
+[database]
+connection = {{ DATABASE_URL | toml_string }}
+
+engine = "postgres"
+[network]
+port = {{ RELAY_PORT or 8080 | int }}
+
+address = "0.0.0.0"
+[options]
+reject_future_seconds = {{ REJECT_FUTURE_SECONDS or 1800 | int}}
+
+[limits]
+subscriptions_per_min = {{ SUBSCRIPTIONS_PER_MIN or 0 | int }}
+
+event_kind_allow_list = [0, 30078]
